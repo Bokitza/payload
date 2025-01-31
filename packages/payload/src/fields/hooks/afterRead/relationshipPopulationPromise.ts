@@ -21,6 +21,7 @@ type PopulateArgs = {
   showHiddenFields: boolean
 }
 
+// TODO: this function is mess, refactor logic
 const populate = async ({
   currentDepth,
   data,
@@ -88,10 +89,6 @@ const populate = async ({
           transactionID: req.transactionID,
         }),
       )
-    }
-
-    if (field.type === 'join') {
-      debugger
     }
 
     if (!relationshipValue) {
