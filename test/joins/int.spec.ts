@@ -1055,8 +1055,21 @@ describe('Joins Field', () => {
         depth: 0,
       })
 
-      expect(parent.children.docs[0].value).toBe(child_1.id)
+      expect(parent.children.docs[0]?.value).toBe(child_1.id)
+      expect(parent.children.docs[0]?.relationTo).toBe('multiple-collections-1')
       expect(parent.children.docs[1].value).toBe(child_2.id)
+      expect(parent.children.docs[1]?.relationTo).toBe('multiple-collections-2')
+
+      parent = await payload.findByID({
+        collection: 'multiple-collections-parents',
+        id: parent.id,
+        depth: 1,
+      })
+
+      expect(parent.children.docs[0]?.value.id).toBe(child_1.id)
+      expect(parent.children.docs[0]?.relationTo).toBe('multiple-collections-1')
+      expect(parent.children.docs[1].value.id).toBe(child_2.id)
+      expect(parent.children.docs[1]?.relationTo).toBe('multiple-collections-2')
     })
   })
 })

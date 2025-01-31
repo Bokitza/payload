@@ -363,44 +363,30 @@ export const traverseFields = ({
         if (Array.isArray(field.collection)) {
           let currentQuery: null | SQLiteSelectBase<any, any, any, any> = null
 
-          const queries = field.collection.map((collection) =>
-            buildCollectionJoinQuery({
-              adapter,
-              collection,
-              currentTableName,
-              field,
-              limit,
-              locale,
-              parentCollection: collectionSlug,
-              path,
-              versions,
-              where,
-            }),
-          )
-
           for (const collection of field.collection) {
-            const { selectFields, subQuery, subQueryAlias } = buildCollectionJoinQuery({
-              adapter,
-              collection,
-              currentTableName,
-              extraSelect: { collectionSlug: collection },
-              field,
-              limit,
-              locale,
-              parentCollection: collectionSlug,
-              path,
-              versions,
-              where,
-            })
+            const joinCollectionTableName = adapter.tableNameMap.get(toSnakeCase(collection))
 
+            const query = db
+              .select({
+                id: adapter.tables[joinCollectionTableName].id,
+                collectionSlug: sql`${collection}`.as('collectionSlug'),
+              })
+              .from(adapter.tables[joinCollectionTableName])
             if (currentQuery === null) {
-              currentQuery = query
+              currentQuery = query as unknown as SQLiteSelectBase<any, any, any, any>
             } else {
-              currentQuery = currentQuery.union(query)
+              currentQuery = currentQuery.unionAll(query) as SQLiteSelectBase<any, any, any, any>
             }
           }
 
-          currentArgs.extras[columnName] = sql`${currentQuery}`.as(randomUUID())
+          currentArgs.extras[columnName] = sql`${db
+            .select({
+              id: jsonAggBuildObject(adapter, {
+                id: sql.raw(`"id"`),
+                collectionSlug: sql.raw(`"collectionSlug"`),
+              }),
+            })
+            .from(sql`${currentQuery}`)}`.as(columnName)
         } else {
           const columnName = `${path.replaceAll('.', '_')}${field.name}`
 
@@ -427,7 +413,7 @@ export const traverseFields = ({
                 }),
               }),
             })
-            .from(sql`${subQuery}`)
+            .from(sql`${subQuery.as(subQueryAlias)}`)
         }
 
         break

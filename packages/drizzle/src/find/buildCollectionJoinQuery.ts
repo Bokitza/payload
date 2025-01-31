@@ -139,7 +139,7 @@ export const buildCollectionJoinQuery = ({
       .from(newAliasTable)
       .where(subQueryWhere)
       .orderBy(() => orderBy.map(({ column, order }) => order(column))),
-  }).as(subQueryAlias)
+  })
 
   return { selectFields, subQuery, subQueryAlias }
 }
