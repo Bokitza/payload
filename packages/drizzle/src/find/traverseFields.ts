@@ -2,7 +2,7 @@ import type { LibSQLDatabase } from 'drizzle-orm/libsql'
 import type { SQLiteSelectBase } from 'drizzle-orm/sqlite-core'
 import type { FlattenedField, JoinQuery, SelectMode, SelectType } from 'payload'
 
-import { eq, sql } from 'drizzle-orm'
+import { asc, desc, eq, sql } from 'drizzle-orm'
 import { fieldIsVirtual } from 'payload/shared'
 import toSnakeCase from 'to-snake-case'
 
@@ -355,16 +355,50 @@ export const traverseFields = ({
 
         if (Array.isArray(field.collection)) {
           let currentQuery: null | SQLiteSelectBase<any, any, any, any> = null
-          const onPath = field.on.split('.').map(toSnakeCase).join('_')
+          const onPath = field.on.split('.').join('_')
+
+          if (Array.isArray(sort)) {
+            throw new Error('Not implemented')
+          }
+
+          let sanitizedSort = sort
+
+          if (!sanitizedSort) {
+            if (
+              field.collection.some((collection) =>
+                adapter.payload.collections[collection].config.fields.some(
+                  (f) => f.type === 'date' && f.name === 'createdAt',
+                ),
+              )
+            ) {
+              sanitizedSort = '-createdAt'
+            } else {
+              sanitizedSort = 'id'
+            }
+          }
+
+          const sortOrder = sanitizedSort.startsWith('-') ? desc : asc
+          sanitizedSort = sanitizedSort.replace('-', '')
+
+          const sortPath = sanitizedSort.split('.').join('_')
+
+          if (global.d) {
+            debugger
+          }
 
           for (const collection of field.collection) {
             const joinCollectionTableName = adapter.tableNameMap.get(toSnakeCase(collection))
+
+            const table = adapter.tables[joinCollectionTableName]
+
+            const sortColumn = table[sortPath]
 
             const query = db
               .select({
                 id: adapter.tables[joinCollectionTableName].id,
                 collectionSlug: sql`${collection}`.as('collectionSlug'),
                 parent: sql`${adapter.tables[joinCollectionTableName][onPath]}`.as(onPath),
+                sortPath: sql`${sortColumn ? sortColumn : null}`.as('sortPath'),
               })
               .from(adapter.tables[joinCollectionTableName])
             if (currentQuery === null) {
@@ -380,6 +414,8 @@ export const traverseFields = ({
             adapter.tables[currentTableName].id,
             sql.raw(`"${subQueryAlias}"."${onPath}"`),
           )
+
+          currentQuery = currentQuery.orderBy(sortOrder(sql`"sortPath"`))
 
           currentArgs.extras[columnName] = sql`${db
             .select({

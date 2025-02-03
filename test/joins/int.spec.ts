@@ -1038,6 +1038,7 @@ describe('Joins Field', () => {
         depth: 0,
         data: {
           parent,
+          title: 'doc-1',
         },
       })
 
@@ -1046,6 +1047,7 @@ describe('Joins Field', () => {
         depth: 0,
         data: {
           parent,
+          title: 'doc-2',
         },
       })
 
@@ -1055,10 +1057,10 @@ describe('Joins Field', () => {
         depth: 0,
       })
 
-      expect(parent.children.docs[0]?.value).toBe(child_1.id)
-      expect(parent.children.docs[0]?.relationTo).toBe('multiple-collections-1')
-      expect(parent.children.docs[1].value).toBe(child_2.id)
-      expect(parent.children.docs[1]?.relationTo).toBe('multiple-collections-2')
+      expect(parent.children.docs[0].value).toBe(child_2.id)
+      expect(parent.children.docs[0]?.relationTo).toBe('multiple-collections-2')
+      expect(parent.children.docs[1]?.value).toBe(child_1.id)
+      expect(parent.children.docs[1]?.relationTo).toBe('multiple-collections-1')
 
       parent = await payload.findByID({
         collection: 'multiple-collections-parents',
@@ -1066,10 +1068,41 @@ describe('Joins Field', () => {
         depth: 1,
       })
 
-      expect(parent.children.docs[0]?.value.id).toBe(child_1.id)
-      expect(parent.children.docs[0]?.relationTo).toBe('multiple-collections-1')
-      expect(parent.children.docs[1].value.id).toBe(child_2.id)
-      expect(parent.children.docs[1]?.relationTo).toBe('multiple-collections-2')
+      expect(parent.children.docs[0].value.id).toBe(child_2.id)
+      expect(parent.children.docs[0]?.relationTo).toBe('multiple-collections-2')
+      expect(parent.children.docs[1]?.value.id).toBe(child_1.id)
+      expect(parent.children.docs[1]?.relationTo).toBe('multiple-collections-1')
+
+      global.d = true
+
+      // Sorting across collections
+      parent = await payload.findByID({
+        collection: 'multiple-collections-parents',
+        id: parent.id,
+        depth: 1,
+        joins: {
+          children: {
+            sort: 'title',
+          },
+        },
+      })
+
+      expect(parent.children.docs[0]?.value.title).toBe('doc-1')
+      expect(parent.children.docs[1]?.value.title).toBe('doc-2')
+
+      parent = await payload.findByID({
+        collection: 'multiple-collections-parents',
+        id: parent.id,
+        depth: 1,
+        joins: {
+          children: {
+            sort: '-title',
+          },
+        },
+      })
+
+      expect(parent.children.docs[0]?.value.title).toBe('doc-2')
+      expect(parent.children.docs[1]?.value.title).toBe('doc-1')
     })
   })
 })

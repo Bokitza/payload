@@ -239,6 +239,10 @@ export default buildConfigWithDefaults({
           relationTo: 'multiple-collections-parents',
           name: 'parent',
         },
+        {
+          name: 'title',
+          type: 'text',
+        },
       ],
     },
     {
@@ -248,6 +252,10 @@ export default buildConfigWithDefaults({
           type: 'relationship',
           relationTo: 'multiple-collections-parents',
           name: 'parent',
+        },
+        {
+          name: 'title',
+          type: 'text',
         },
       ],
     },

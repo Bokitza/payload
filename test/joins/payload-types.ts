@@ -559,6 +559,7 @@ export interface MultipleCollectionsParent {
 export interface MultipleCollections1 {
   id: string;
   parent?: (string | null) | MultipleCollectionsParent;
+  title?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -569,6 +570,7 @@ export interface MultipleCollections1 {
 export interface MultipleCollections2 {
   id: string;
   parent?: (string | null) | MultipleCollectionsParent;
+  title?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -973,6 +975,7 @@ export interface MultipleCollectionsParentsSelect<T extends boolean = true> {
  */
 export interface MultipleCollections1Select<T extends boolean = true> {
   parent?: T;
+  title?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -982,6 +985,7 @@ export interface MultipleCollections1Select<T extends boolean = true> {
  */
 export interface MultipleCollections2Select<T extends boolean = true> {
   parent?: T;
+  title?: T;
   updatedAt?: T;
   createdAt?: T;
 }
